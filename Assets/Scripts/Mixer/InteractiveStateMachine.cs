@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace Assets.Scripts.Managers
 {
@@ -12,13 +13,18 @@ namespace Assets.Scripts.Managers
     /// </summary>
     class InteractiveStateMachine
     {
-        private bool _p1Joined, _p2Joined = false;
+        public bool GameIsActive
+        {
+            get;
+            set;
+        }
 
         public bool AllPlayersJoined
         {
             get
             {
-                return _p1Joined && _p2Joined;
+                return (ParticipantOne != null) && 
+                    (ParticipantTwo != null);
             }
         }
 
@@ -38,7 +44,7 @@ namespace Assets.Scripts.Managers
         public InteractiveParticipant ParticipantOne
         {
             get;
-            set;
+            set;       
         }
 
         public InteractiveParticipant ParticipantTwo
@@ -66,11 +72,11 @@ namespace Assets.Scripts.Managers
 
         public void ResetToDefault()
         {
-            _p1Joined = _p2Joined = false;
+            GameIsActive = false;
+
             ParticipantOne = null;
             ParticipantTwo = null;
 
-            MixerInteractive.OnInteractiveButtonEvent -= OnJoinButtonEvents;
             MixerInteractive.GetControl(OnlineConstants.CONTROL_P1_JOIN).SetDisabled(false);
             MixerInteractive.GetControl(OnlineConstants.CONTROL_P2_JOIN).SetDisabled(false);
 
@@ -87,15 +93,15 @@ namespace Assets.Scripts.Managers
 
         private void OnJoinButtonEvents(object sender, InteractiveButtonEventArgs ev)
         {
+            if (ev.Participant.UserID == 0) return;
+
             if (ev.ControlID == OnlineConstants.CONTROL_P1_JOIN)
             {
-                _p1Joined = true;
                 ParticipantOne = ev.Participant;
                 UpdateControlsAfterJoin(ev);
             }
             else if (ev.ControlID == OnlineConstants.CONTROL_P2_JOIN)
             {
-                _p2Joined = true;
                 ParticipantTwo = ev.Participant;
                 UpdateControlsAfterJoin(ev);
             }
@@ -119,8 +125,8 @@ namespace Assets.Scripts.Managers
             var waitingBlue = "Waiting for blue player";
             var blueJoined = "Blue player joined";
 
-            var message = (_p1Joined ? redJoined : waitingRed)
-                + (_p2Joined ? blueJoined : waitingBlue);
+            var message = (ParticipantOne != null ? redJoined : waitingRed)
+                + (ParticipantTwo != null ? blueJoined : waitingBlue);
 
             label.SetText(message);
         }

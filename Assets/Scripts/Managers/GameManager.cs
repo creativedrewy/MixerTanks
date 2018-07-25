@@ -3,6 +3,7 @@ using Assets.Scripts.Mixer;
 using Microsoft.Mixer;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -60,15 +61,6 @@ namespace Complete
             }
         }
 
-        private void OnParticipantStateChange(object sender, InteractiveParticipantStateChangedEventArgs ev)
-        {
-            if (ev.State == InteractiveParticipantState.Joined)
-            {
-                ev.Participant.Group = MixerInteractive.GetGroup(_stateMachine.ParticipantStartGroup);
-            }
-            //TODO: We may want to handle the "leaving" state for any of the current set of players
-        }
-
         private void OnGiveHelp(object sender, InteractiveButtonEventArgs ev)
         {
             if (ev.ControlID == OnlineConstants.CONTROL_HELP_RED)
@@ -97,7 +89,7 @@ namespace Complete
             yield return StartCoroutine(DestroyGameSetup());
 
             //This coroutine doesn't yield. Means that the previously-current version of the GameLoop will end.
-            StartCoroutine(GameLoop());
+            yield return StartCoroutine(GameLoop());
         }
 
         /// <summary>
@@ -138,6 +130,7 @@ namespace Complete
             var playerUpdateLabel = MixerInteractive.GetControl(OnlineConstants.CONTROL_PLAYER_UPDATE) as InteractiveLabelControl;
             playerInfoLabel.SetText(_redPlayer.OnlineParticipant.UserName + " is Red\n" + _bluePlayer.OnlineParticipant.UserName + " is Blue");
             playerUpdateLabel.SetText("Game has begun!");
+
             yield return null;
         }
 
@@ -146,6 +139,8 @@ namespace Complete
         /// </summary
         private IEnumerator PlayAllGameRounds()
         {
+            _stateMachine.GameIsActive = true;
+
             while (_gameWinner == null)
             {
                 yield return StartCoroutine(RoundIsAboutToStart());
@@ -154,6 +149,8 @@ namespace Complete
 
                 yield return StartCoroutine(RoundHasEnded());
             }
+
+            _stateMachine.GameIsActive = false;
         }
 
         /// <summary>
@@ -218,14 +215,23 @@ namespace Complete
         /// </summary>
         private IEnumerator DestroyGameSetup()
         {
-            _stateMachine.SetAllParticipantsToLobby();
+            _roundNumber = 0;
+            _roundWinner = null;
+            _gameWinner = null;
+
+            _bluePlayer._wins = 0;
+            _bluePlayer.OnlineParticipant = null;
+            _redPlayer._wins = 0;
+            _redPlayer.OnlineParticipant = null;
+
             _stateMachine.ResetToDefault();
 
-            Destroy(_bluePlayer._instance);
             Destroy(_redPlayer._instance);
+            Destroy(_bluePlayer._instance);
+            _redPlayer._instance = null;
+            _bluePlayer._instance = null;
 
-            _bluePlayer.OnlineParticipant = null;
-            _redPlayer.OnlineParticipant = null;
+            _stateMachine.SetAllParticipantsToLobby();
 
             _cameraControl._targets = new Transform[0];
 
@@ -300,6 +306,55 @@ namespace Complete
                 message = _gameWinner._coloredPlayerText + " WINS THE GAME!";
 
             return message;
+        }
+
+
+        /// <summary>
+        /// Event called for all participants arriving at the stream; only need particular handling
+        /// for when game players leave
+        /// </summary>
+        public void OnParticipantStateChange(object sender, InteractiveParticipantStateChangedEventArgs ev)
+        {
+            if (ev.State == InteractiveParticipantState.Joined)
+            {
+                ev.Participant.Group = MixerInteractive.GetGroup(_stateMachine.ParticipantStartGroup);
+            }
+            else if (ev.State == InteractiveParticipantState.Left)
+            {
+                HandleParticipantLeave(ev.Participant);
+            }
+        }
+
+        /// <summary>
+        /// Special leave handling for either of player 1 or 2
+        /// </summary>
+        private void HandleParticipantLeave(InteractiveParticipant participant)
+        {
+            if (participant == _stateMachine.ParticipantOne || participant == _stateMachine.ParticipantTwo)
+            {
+                if (_stateMachine.GameIsActive)
+                {
+                    var tank = _playerTanks.ToList().First(x => x.OnlineParticipant != participant);
+                    tank._wins = _numRoundsToWin;
+                    tank._instance.SetActive(false);
+                }
+                else if (participant == _stateMachine.ParticipantOne)
+                {
+                    _redPlayer.OnlineParticipant = null;
+                    _stateMachine.ParticipantOne = null;
+
+                    MixerInteractive.GetControl(OnlineConstants.CONTROL_P1_JOIN).SetDisabled(false);
+                    _stateMachine.UpdateLobbyStatus();
+                }
+                else if (participant == _stateMachine.ParticipantTwo)
+                {
+                    _bluePlayer.OnlineParticipant = null;
+                    _stateMachine.ParticipantTwo = null;
+
+                    MixerInteractive.GetControl(OnlineConstants.CONTROL_P2_JOIN).SetDisabled(false);
+                    _stateMachine.UpdateLobbyStatus();
+                }
+            }
         }
     }
 }
