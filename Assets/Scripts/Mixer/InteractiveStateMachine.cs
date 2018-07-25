@@ -76,7 +76,6 @@ namespace Assets.Scripts.Managers
             ParticipantOne = null;
             ParticipantTwo = null;
 
-            MixerInteractive.OnInteractiveButtonEvent -= OnJoinButtonEvents;
             MixerInteractive.GetControl(OnlineConstants.CONTROL_P1_JOIN).SetDisabled(false);
             MixerInteractive.GetControl(OnlineConstants.CONTROL_P2_JOIN).SetDisabled(false);
 
