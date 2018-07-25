@@ -325,7 +325,9 @@ namespace Complete
             {
                 if (_stateMachine.GameIsActive)
                 {
-                    _gameWinner = _playerTanks.ToList().First(tank => tank.OnlineParticipant == participant);
+                    var tank = _playerTanks.ToList().First(x => x.OnlineParticipant != participant);
+                    tank._wins = _numRoundsToWin;
+                    tank._instance.SetActive(false);
                 }
                 else if (participant == _stateMachine.ParticipantOne)
                 {
