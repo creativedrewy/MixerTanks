@@ -89,7 +89,7 @@ namespace Complete
             yield return StartCoroutine(DestroyGameSetup());
 
             //This coroutine doesn't yield. Means that the previously-current version of the GameLoop will end.
-            StartCoroutine(GameLoop());
+            yield return StartCoroutine(GameLoop());
         }
 
         /// <summary>
@@ -215,13 +215,21 @@ namespace Complete
         /// </summary>
         private IEnumerator DestroyGameSetup()
         {
+            _roundNumber = 0;
+            _roundWinner = null;
+            _gameWinner = null;
+
+            _bluePlayer._wins = 0;
             _bluePlayer.OnlineParticipant = null;
+            _redPlayer._wins = 0;
             _redPlayer.OnlineParticipant = null;
 
             _stateMachine.ResetToDefault();
 
-            Destroy(_bluePlayer._instance);
             Destroy(_redPlayer._instance);
+            Destroy(_bluePlayer._instance);
+            _redPlayer._instance = null;
+            _bluePlayer._instance = null;
 
             _stateMachine.SetAllParticipantsToLobby();
 
