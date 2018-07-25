@@ -47,8 +47,9 @@ namespace Complete
                 {
                     _movement.participantId = _participant.UserID;
                     _shooting.participantId = _participant.UserID;
+                    
                     _nameText.text = _participant.UserName;
-
+                    
                     _coloredPlayerText = "<color=#" + ColorUtility.ToHtmlStringRGB(_playerColor) + ">" + _participant.UserName + "</color>";
                 }
             }
