@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
-
+using TMPro;
 
 namespace Complete
 {
@@ -32,6 +32,7 @@ namespace Complete
         public TankShooting _shooting;
         public TankHealth _health;
         public ShellExplosion _explosion;
+        public TextMeshPro _nameText;
         [FormerlySerializedAsAttribute("m_CanvasGameObject")]
         private GameObject _canvasGameObject;
 
@@ -46,6 +47,7 @@ namespace Complete
                 {
                     _movement.participantId = _participant.UserID;
                     _shooting.participantId = _participant.UserID;
+                    _nameText.text = _participant.UserName;
 
                     _coloredPlayerText = "<color=#" + ColorUtility.ToHtmlStringRGB(_playerColor) + ">" + _participant.UserName + "</color>";
                 }
@@ -62,6 +64,8 @@ namespace Complete
             _explosion = _instance.GetComponent<ShellExplosion>();
 
             _canvasGameObject = _instance.GetComponentInChildren<Canvas>().gameObject;
+
+            _nameText = _instance.GetComponentInChildren<TextMeshPro>();
 
             _movement._playerNumber = _playerNumber;
             _shooting._playerNumber = _playerNumber;
