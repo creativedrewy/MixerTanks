@@ -44,8 +44,7 @@ namespace Assets.Scripts.Managers
         public InteractiveParticipant ParticipantOne
         {
             get;
-            set;
-                
+            set;       
         }
 
         public InteractiveParticipant ParticipantTwo
@@ -73,6 +72,8 @@ namespace Assets.Scripts.Managers
 
         public void ResetToDefault()
         {
+            GameIsActive = false;
+
             ParticipantOne = null;
             ParticipantTwo = null;
 

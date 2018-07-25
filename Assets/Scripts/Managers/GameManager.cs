@@ -215,14 +215,15 @@ namespace Complete
         /// </summary>
         private IEnumerator DestroyGameSetup()
         {
-            _stateMachine.SetAllParticipantsToLobby();
+            _bluePlayer.OnlineParticipant = null;
+            _redPlayer.OnlineParticipant = null;
+
             _stateMachine.ResetToDefault();
 
             Destroy(_bluePlayer._instance);
             Destroy(_redPlayer._instance);
 
-            _bluePlayer.OnlineParticipant = null;
-            _redPlayer.OnlineParticipant = null;
+            _stateMachine.SetAllParticipantsToLobby();
 
             _cameraControl._targets = new Transform[0];
 
