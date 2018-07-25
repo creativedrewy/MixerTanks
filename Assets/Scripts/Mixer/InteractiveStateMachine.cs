@@ -93,6 +93,8 @@ namespace Assets.Scripts.Managers
 
         private void OnJoinButtonEvents(object sender, InteractiveButtonEventArgs ev)
         {
+            if (ev.Participant.UserID == 0) return;
+
             if (ev.ControlID == OnlineConstants.CONTROL_P1_JOIN)
             {
                 ParticipantOne = ev.Participant;
